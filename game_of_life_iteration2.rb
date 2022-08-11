@@ -1,15 +1,16 @@
+# frozen_string_literal: true
+
 class Grid
   attr_accessor :grid_height, :grid_width, :grid, :number_generation
 
-  def initialize(grid_height,grid_width)
+  def initialize(grid_height, grid_width)
     @number_generation = 1
     @grid_height = grid_height
     @grid_width = grid_width
-    @grid = make_grid
-    check_neighbors
-    print_grid
-    next_iteration
+    make_grid
   end
+
+  attr_reader :grid
 
   def print_grid
     puts "Generation #{@number_generation}:"
@@ -32,10 +33,33 @@ class Grid
       @grid_width.times do |j|
         array[i][j].pos_x = j
         array[i][j].pos_y = i
-        rand(1..100).between?(60,100) ? array[i][j].revive_cell : array[i][j].kill_cell
+        rand(1..100).between?(60, 100) ? array[i][j].revive_cell : array[i][j].kill_cell
       end
     end
-    array
+    @grid = array
+  end
+
+  def update_grid
+    @number_generation += 1
+    @grid.each do |row|
+      row.each do |cell|
+        cell.alive = cell.next_state
+      end
+    end
+  end
+end
+
+class Game_rules
+  def initialize
+    puts 'indique numero de columnas'
+    @column = gets.chomp.to_i
+    puts 'indique numero de filas'
+    @row = gets.chomp.to_i
+    @grid_object = Grid.new(@column, @row)
+    @grid = @grid_object.grid
+    check_neighbors
+    @grid_object.print_grid
+    next_iteration
   end
 
   def check_neighbors
@@ -47,19 +71,19 @@ class Grid
         # NORTH
         neighbors << @grid[cell_position_y - 1][cell_position_x] if cell_position_y - 1 >= 0
         # NORTH-EAST
-        if cell_position_y - 1 >= 0 && cell_position_x + 1 < @grid_width
+        if cell_position_y - 1 >= 0 && cell_position_x + 1 < @row
           neighbors << @grid[cell_position_y - 1][cell_position_x + 1]
         end
         # EAST
-        neighbors << @grid[cell_position_y][cell_position_x + 1] if cell_position_x + 1 < @grid_width
+        neighbors << @grid[cell_position_y][cell_position_x + 1] if cell_position_x + 1 < @row
         # SOUTH-EAST
-        if cell_position_y + 1 < @grid_height && cell_position_x + 1 < @grid_width
+        if cell_position_y + 1 < @column && cell_position_x + 1 < @row
           neighbors << @grid[cell_position_y + 1][cell_position_x + 1]
         end
         # SOUTH
-        neighbors << @grid[cell_position_y + 1][cell_position_x] if cell_position_y + 1 < @grid_height
+        neighbors << @grid[cell_position_y + 1][cell_position_x] if cell_position_y + 1 < @column
         # SOUTH-WEST
-        if cell_position_y + 1 < @grid_height && (cell_position_x - 1) >= 0
+        if cell_position_y + 1 < @column && (cell_position_x - 1) >= 0
           neighbors << @grid[cell_position_y + 1][cell_position_x - 1]
         end
         # WEST
@@ -79,40 +103,27 @@ class Grid
       row.each do |cell|
         alive = 0
         cell.neighbors.each do |neighbor|
-          if neighbor.alive == 1
-            alive += 1
-          end
+          alive += 1 if neighbor.alive == 1
         end
-      if cell.alive == 1
-        if alive < 2
-          cell.next_state = 0
-        elsif alive > 3
-          cell.next_state = 0
-        else
+        if cell.alive == 1
+          cell.next_state = if alive < 2
+                              0
+                            elsif alive > 3
+                              0
+                            else
+                              1
+                            end
+        elsif alive == 3
           cell.next_state = 1
         end
-      else
-        if alive == 3
-          cell.next_state = 1
-        end
-      end
-      end
-    end
-  end
-
-  def update_grid
-    @number_generation += 1
-    @grid.each do |row|
-      row.each do |cell|
-        cell.alive = cell.next_state
       end
     end
   end
 
   def next_iteration
     next_state
-    update_grid
-    print_grid
+    @grid_object.update_grid
+    @grid_object.print_grid
   end
 end
 
@@ -135,8 +146,5 @@ class Cell
     @alive = 1
   end
 end
-puts 'indique numero de columnas'
-column=gets.chomp.to_i
-puts 'indique numero de filas'
-row=gets.chomp.to_i
-grid = Grid.new(column,row)
+
+Game_rules.new
