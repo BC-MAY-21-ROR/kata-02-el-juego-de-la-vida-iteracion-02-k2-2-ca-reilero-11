@@ -1,11 +1,11 @@
 class Grid
   attr_accessor :grid_height, :grid_width, :grid, :number_generation
 
-  def initialize(data)
+  def initialize(grid_height,grid_width)
     @number_generation = 1
-    @grid_height = data.size
-    @grid_width = data[0].size
-    @grid = make_grid(data)
+    @grid_height = grid_height
+    @grid_width = grid_width
+    @grid = make_grid
     check_neighbors
     print_grid
     next_iteration
@@ -26,17 +26,13 @@ class Grid
     puts ' '
   end
 
-  def make_grid(data)
+  def make_grid
     array = Array.new(@grid_height) { Array.new(@grid_width) { Cell.new } }
     @grid_height.times do |i|
       @grid_width.times do |j|
         array[i][j].pos_x = j
         array[i][j].pos_y = i
-        if data[i][j] === '*'
-          array[i][j].revive_cell
-        else
-          array[i][j].kill_cell
-        end
+        rand(1..100).between?(60,100) ? array[i][j].revive_cell : array[i][j].kill_cell
       end
     end
     array
@@ -139,11 +135,8 @@ class Cell
     @alive = 1
   end
 end
-
-def openFile(ruta)
-  file = File.open(ruta)
-  file.readlines.map(&:chomp)
-end
-
-data = openFile('text.text')
-grid = Grid.new(data)
+puts 'indique numero de columnas'
+column=gets.chomp.to_i
+puts 'indique numero de filas'
+row=gets.chomp.to_i
+grid = Grid.new(column,row)
